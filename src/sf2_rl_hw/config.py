@@ -83,16 +83,6 @@ class RecordingConfig:
 
 
 @dataclass
-class PlayConfig:
-    checkpoint_path: str = ""
-    render: bool = True
-    save_video: bool = False
-    overlay: bool = True
-    episodes: int = 1
-    deterministic: bool = True
-
-
-@dataclass
 class ExperimentConfig:
     name: str = "baseline"
     notes: str = ""
@@ -103,7 +93,6 @@ class ExperimentConfig:
     ppo: PPOConfig = field(default_factory=PPOConfig)
     evaluation: EvaluationConfig = field(default_factory=EvaluationConfig)
     recording: RecordingConfig = field(default_factory=RecordingConfig)
-    play: PlayConfig = field(default_factory=PlayConfig)
 
     @property
     def experiment_name(self) -> str:
@@ -135,7 +124,6 @@ def load_experiment_config(path: Path) -> Tuple[ExperimentConfig, Dict[str, Any]
         ppo=PPOConfig(**raw.get("ppo", {})),
         evaluation=EvaluationConfig(**raw.get("evaluation", {})),
         recording=RecordingConfig(**raw.get("recording", {})),
-        play=PlayConfig(**raw.get("play", {})),
     )
     _validate_config(cfg, resolved_path)
     return cfg, cfg.to_dict()
@@ -174,7 +162,6 @@ def _apply_env_overrides(raw: Dict[str, Any]) -> Dict[str, Any]:
     env_cfg = overridden.setdefault("env", {})
     eval_cfg = overridden.setdefault("evaluation", {})
     record_cfg = overridden.setdefault("recording", {})
-    play_cfg = overridden.setdefault("play", {})
 
     rom_override = os.getenv("SF2_ROM_PATH")
     if rom_override:
@@ -188,10 +175,6 @@ def _apply_env_overrides(raw: Dict[str, Any]) -> Dict[str, Any]:
     if record_checkpoint:
         record_cfg["checkpoint_path"] = record_checkpoint
 
-    play_checkpoint = os.getenv("SF2_PLAY_CHECKPOINT")
-    if play_checkpoint:
-        play_cfg["checkpoint_path"] = play_checkpoint
-
     return overridden
 
 
@@ -201,14 +184,12 @@ def _resolve_path_fields(raw: Dict[str, Any], config_dir: Path) -> Dict[str, Any
     env_cfg = resolved.setdefault("env", {})
     eval_cfg = resolved.setdefault("evaluation", {})
     record_cfg = resolved.setdefault("recording", {})
-    play_cfg = resolved.setdefault("play", {})
 
     project_root = _find_project_root(config_dir)
     runtime_cfg["output_dir"] = str(_resolve_path(runtime_cfg.get("output_dir", "artifacts"), project_root))
     env_cfg["rom_path"] = _resolve_optional_path(env_cfg.get("rom_path", ""), project_root)
     eval_cfg["checkpoint_path"] = _resolve_optional_path(eval_cfg.get("checkpoint_path", ""), project_root)
     record_cfg["checkpoint_path"] = _resolve_optional_path(record_cfg.get("checkpoint_path", ""), project_root)
-    play_cfg["checkpoint_path"] = _resolve_optional_path(play_cfg.get("checkpoint_path", ""), project_root)
     return resolved
 
 
@@ -259,8 +240,6 @@ def _validate_config(config: ExperimentConfig, config_path: Path) -> None:
         raise ValueError("recording.episodes must be greater than 0")
     if config.recording.fps <= 0:
         raise ValueError("recording.fps must be greater than 0")
-    if config.play.episodes <= 0:
-        raise ValueError("play.episodes must be greater than 0")
     if config.reward.profile not in {"baseline", "reference_v1"}:
         raise ValueError("reward.profile must be one of: baseline, reference_v1")
     if not config.env.grayscale and config.env.frame_stack % 3 != 0:

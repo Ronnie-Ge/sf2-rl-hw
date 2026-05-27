@@ -60,20 +60,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Glob pattern for batch checkpoint selection.",
     )
 
-    play_parser = subparsers.add_parser("play", help="Run one-off agent play sessions.")
-    play_parser.add_argument(
-        "--config",
-        type=Path,
-        default=Path("configs/experiments/baseline.yaml"),
-        help="Path to the experiment config.",
-    )
-    play_parser.add_argument(
-        "--checkpoint",
-        type=Path,
-        default=None,
-        help="Optional checkpoint override.",
-    )
-
     return parser
 
 
@@ -97,12 +83,6 @@ def main() -> None:
         from .record import run_recording
 
         run_recording(args.config, args.checkpoint, args.latest, args.glob_pattern)
-        return
-
-    if args.command == "play":
-        from .play import run_play
-
-        run_play(args.config, args.checkpoint)
         return
 
     parser.error(f"Unsupported command: {args.command}")

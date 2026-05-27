@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -21,6 +22,7 @@ def build_ppo_agent(
 ) -> Any:
     from stable_baselines3 import PPO
 
+    resolved_tensorboard_log = _resolve_tensorboard_log(tensorboard_log)
     return PPO(
         config.policy,
         env,
@@ -33,7 +35,7 @@ def build_ppo_agent(
         ent_coef=config.ent_coef,
         learning_rate=linear_schedule(config.learning_rate_start, config.learning_rate_end),
         clip_range=linear_schedule(config.clip_range_start, config.clip_range_end),
-        tensorboard_log=str(tensorboard_log) if tensorboard_log else None,
+        tensorboard_log=resolved_tensorboard_log,
     )
 
 
@@ -66,3 +68,11 @@ def save_agent(model: Any, output_path: Path) -> None:
 def predict_action(model: Any, observation: Any, deterministic: bool) -> Any:
     action, _ = model.predict(observation, deterministic=deterministic)
     return action
+
+
+def _resolve_tensorboard_log(tensorboard_log: Optional[Path]) -> Optional[str]:
+    if tensorboard_log is None:
+        return None
+    if importlib.util.find_spec("tensorboard") is None:
+        return None
+    return str(tensorboard_log)

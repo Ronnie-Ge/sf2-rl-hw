@@ -12,7 +12,6 @@
 - `train`：訓練模型，定期儲存 checkpoint，並輸出 evaluation metrics
 - `evaluate`：讀取指定 checkpoint，輸出評估結果
 - `record`：讀取單一或多個 checkpoint，產生帶 overlay 的影片
-- `play`：讀取 checkpoint，進行單次遊玩或即時觀察
 - `YAML config + extends` 的實驗設定管理
 - `baseline` 與 `reference_v1` reward profile
 
@@ -38,7 +37,6 @@ sf2-rl-hw/
 │   ├── train.py
 │   ├── evaluate.py
 │   ├── record.py
-│   ├── play.py
 │   ├── rollout.py
 │   ├── agents/
 │   ├── envs/
@@ -113,7 +111,7 @@ uv sync
 uv run sf2-rl-hw --help
 ```
 
-如果安裝成功，會看到 `train / evaluate / record / play` 四個子指令。
+如果安裝成功，會看到 `train / evaluate / record` 三個子指令。
 
 ## 必要檔案與資料
 
@@ -357,25 +355,6 @@ uv run sf2-rl-hw record \
 - `agent_hp`
 - `enemy_hp`
 - `result`
-
-## 如何單次遊玩
-
-### 即時單次觀察
-
-```bash
-uv run sf2-rl-hw play \
-  --config configs/experiments/baseline.yaml \
-  --checkpoint /path/to/ppo_step_500000.zip
-```
-
-### `play` 和 `record` 的差異
-
-- `play`
-  - 偏向即時觀察
-  - 預設不存影片
-- `record`
-  - 偏向正式輸出影片
-  - 可批次處理多個 checkpoint
 
 ## GPU 使用方式
 

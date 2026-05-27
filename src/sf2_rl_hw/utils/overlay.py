@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 
 
 def format_overlay_lines(overlay_state: Dict[str, Any]) -> List[str]:
@@ -22,22 +22,36 @@ def format_overlay_lines(overlay_state: Dict[str, Any]) -> List[str]:
 
 
 def draw_overlay(frame: np.ndarray, overlay_state: Dict[str, Any]) -> np.ndarray:
-    image = Image.fromarray(_ensure_rgb(frame))
-    draw = ImageDraw.Draw(image)
+    image = Image.fromarray(_ensure_rgb(frame)).convert("RGBA")
+    overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    font = ImageFont.load_default()
     lines = format_overlay_lines(overlay_state)
 
-    padding = 8
-    line_height = 14
-    box_width = 360
-    box_height = padding * 2 + line_height * len(lines)
-    draw.rectangle((6, 6, 6 + box_width, 6 + box_height), fill=(0, 0, 0))
+    margin = 6
+    padding_x = 6
+    padding_y = 5
+    line_spacing = 2
+    line_boxes = [draw.textbbox((0, 0), line, font=font) for line in lines]
+    text_width = max((bbox[2] - bbox[0]) for bbox in line_boxes)
+    line_heights = [bbox[3] - bbox[1] for bbox in line_boxes]
+    text_height = sum(line_heights) + line_spacing * max(0, len(lines) - 1)
+    box_width = min(frame.shape[1] - margin * 2, text_width + padding_x * 2)
+    box_height = min(frame.shape[0] - margin * 2, text_height + padding_y * 2)
 
-    y = 6 + padding
+    draw.rounded_rectangle(
+        (margin, margin, margin + box_width, margin + box_height),
+        radius=6,
+        fill=(0, 0, 0, 144),
+    )
+
+    y = margin + padding_y
     for line in lines:
-        draw.text((12, y), line, fill=(255, 255, 255))
-        y += line_height
+        draw.text((margin + padding_x, y), line, font=font, fill=(255, 255, 255, 255))
+        _, _, _, bottom = draw.textbbox((margin + padding_x, y), line, font=font)
+        y = bottom + line_spacing
 
-    return np.asarray(image, dtype=np.uint8)
+    return np.asarray(Image.alpha_composite(image, overlay).convert("RGB"), dtype=np.uint8)
 
 
 def _ensure_rgb(frame: np.ndarray) -> np.ndarray:

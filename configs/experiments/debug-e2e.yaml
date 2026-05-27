@@ -1,0 +1,37 @@
+extends: ../base.yaml
+
+name: debug-e2e
+notes: Minimal end-to-end smoke test configuration.
+tags:
+  - debug
+  - e2e
+  - smoke-test
+
+runtime:
+  experiment_name: debug-e2e
+  device: cpu
+
+ppo:
+  total_timesteps: 256
+  num_envs: 1
+  n_steps: 64
+  batch_size: 64
+  n_epochs: 1
+  checkpoint_freq: 128
+  verbose: 1
+
+evaluation:
+  episodes: 1
+  deterministic: true
+  render: false
+  save_metrics: true
+  trigger_every_n_timesteps: 128
+
+recording:
+  enabled: true
+  episodes: 1
+  deterministic: true
+  fps: 30
+  overlay: true
+  save_video: true
+  render: false

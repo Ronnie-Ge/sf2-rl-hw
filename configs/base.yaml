@@ -67,11 +67,3 @@ recording:
   overlay: true
   save_video: true
   render: false
-
-play:
-  checkpoint_path: ""
-  render: true
-  save_video: false
-  overlay: true
-  episodes: 1
-  deterministic: true
