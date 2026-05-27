@@ -1,0 +1,26 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Training artifacts
+artifacts/
+checkpoints/
+logs/
+runs/
+videos/
+
+# Local assets
+roms/
+data/
+retro_data/**/rom.md
+
+# Editor files
+.idea/
+.vscode/

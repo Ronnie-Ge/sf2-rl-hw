@@ -1,0 +1,10 @@
+extends: ../base.yaml
+
+name: baseline
+notes: First reproducible scaffold for the course project.
+tags:
+  - baseline
+  - reportable
+
+runtime:
+  experiment_name: baseline

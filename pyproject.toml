@@ -1,0 +1,26 @@
+[project]
+name = "sf2-rl-hw"
+version = "0.1.0"
+description = "Config-driven reinforcement learning project for Street Fighter II"
+readme = "README.md"
+authors = [
+    { name = "ChingJe", email = "cjtseng.ai14@nycu.edu.tw" }
+]
+requires-python = ">=3.8"
+dependencies = [
+    "gym>=0.21,<0.24",
+    "gym-retro>=0.8.0",
+    "numpy>=1.24",
+    "Pillow>=10.0",
+    "PyYAML>=6.0",
+    "shimmy>=2.0.0",
+    "stable-baselines3>=2.3.2",
+    "torch>=2.0,<2.3",
+]
+
+[project.scripts]
+sf2-rl-hw = "sf2_rl_hw:main"
+
+[build-system]
+requires = ["uv_build>=0.9.7,<0.10.0"]
+build-backend = "uv_build"

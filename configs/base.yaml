@@ -1,0 +1,77 @@
+name: baseline
+notes: Base experiment shared by all configs.
+tags:
+  - sf2
+  - rl
+
+runtime:
+  seed: 42
+  device: auto
+  output_dir: artifacts
+  experiment_name: baseline
+
+env:
+  game: StreetFighterIISpecialChampionEdition-Genesis
+  state: Champion.Level12.RyuVsBison
+  scenario: default
+  rom_path: ../ROM/Street Fighter II' - Special Champion Edition (USA).zip
+  frame_skip: 6
+  frame_stack: 9
+  width: 128
+  height: 100
+  grayscale: false
+  render: false
+  headless: true
+  reset_round: true
+
+reward:
+  profile: reference_v1
+  damage_dealt_weight: 3.0
+  damage_taken_weight: 1.0
+  win_bonus: 176.0
+  lose_penalty: 176.0
+  time_penalty: 0.0
+  normalize_factor: 0.001
+  full_hp: 176
+
+ppo:
+  policy: CnnPolicy
+  total_timesteps: 1000000
+  num_envs: 4
+  learning_rate_start: 0.00025
+  learning_rate_end: 0.0000025
+  clip_range_start: 0.15
+  clip_range_end: 0.025
+  batch_size: 256
+  n_steps: 256
+  n_epochs: 4
+  gamma: 0.94
+  ent_coef: 0.0
+  verbose: 1
+  checkpoint_freq: 500000
+
+evaluation:
+  checkpoint_path: ""
+  episodes: 5
+  deterministic: true
+  render: false
+  save_metrics: true
+  trigger_every_n_timesteps: 500000
+
+recording:
+  enabled: true
+  checkpoint_path: ""
+  episodes: 1
+  deterministic: true
+  fps: 60
+  overlay: true
+  save_video: true
+  render: false
+
+play:
+  checkpoint_path: ""
+  render: true
+  save_video: false
+  overlay: true
+  episodes: 1
+  deterministic: true
