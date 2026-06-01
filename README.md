@@ -189,6 +189,113 @@ uv run sf2-rl-hw --help
 
 `recording.fps` 預設為 `10`，原因是 baseline 的 `frame_skip=6`。目前錄影只會保留每次 agent step 的最後一張畫面，因此若仍用 `60 fps` 輸出，影片會看起來像快轉；`10 fps` 會比較接近正常觀感。
 
+### 目前 reward 設計
+
+專案目前支援兩種 reward profile：
+
+- `baseline`
+- `reference_v1`
+
+兩種 reward 都會先計算：
+
+- `damage_dealt = max(0, prev_enemy_hp - enemy_hp)`
+- `damage_taken = max(0, prev_agent_hp - agent_hp)`
+
+也就是：
+
+- 對敵人造成傷害時給正向訊號
+- 自己受到傷害時給負向訊號
+
+最後再乘上 `normalize_factor`，作為真正送進 PPO 的 reward。
+
+### `baseline` reward
+
+`baseline` 的設計比較直接，公式可以寫成：
+
+```text
+raw_reward =
+  damage_dealt_weight * damage_dealt
+  - damage_taken_weight * damage_taken
+  + win_bonus            if win
+  - lose_penalty         if lose
+  - time_penalty
+
+normalized_reward = raw_reward * normalize_factor
+```
+
+這種寫法的特性是：
+
+- 中途攻擊與受傷都會立即反映在 reward 上
+- 回合結束時，贏會加固定 bonus，輸會扣固定 penalty
+- 規則簡單，容易解釋，但有時會讓 agent 學到偏保守或偏局部的行為
+
+### `reference_v1` reward
+
+`reference_v1` 是目前預設使用的 reward profile，也就是你現在 `baseline.yaml` 實際會跑的版本。
+
+它的想法來自 `street-fighter-ai` 的設計方向：
+
+- 對敵方造成傷害時給正回饋
+- 自身受傷時給負回饋
+- 輸掉時依照敵人剩餘血量決定 penalty 大小
+- 贏的時候依照自己剩餘血量決定 bonus 大小
+
+公式可以寫成：
+
+當回合尚未結束時：
+
+```text
+raw_reward =
+  damage_dealt_weight * damage_dealt
+  - damage_taken_weight * damage_taken
+  - time_penalty
+```
+
+當我方輸掉時：
+
+```text
+raw_reward =
+  - lose_penalty * full_hp ^ ((enemy_hp + 1) / (full_hp + 1))
+```
+
+當我方贏時：
+
+```text
+raw_reward =
+  win_bonus * full_hp ^ ((agent_hp + 1) / (full_hp + 1))
+```
+
+最後同樣做：
+
+```text
+normalized_reward = raw_reward * normalize_factor
+```
+
+這種寫法的特性是：
+
+- 不是只在輸贏時給固定獎懲，而是把剩餘血量也納入
+- 如果輸掉但至少有把敵人血量壓低，懲罰會比完全沒造成傷害小
+- 如果贏的時候自己還保有較多血量，獎勵會更高
+- 比較有機會減少 agent 因為怕輸而完全不敢進攻的情況
+
+### 目前 baseline config 使用的是哪一種
+
+目前預設的 `configs/experiments/baseline.yaml` 會繼承 `base.yaml`，而 `base.yaml` 的 reward 設定是：
+
+```yaml
+reward:
+  profile: reference_v1
+  damage_dealt_weight: 3.0
+  damage_taken_weight: 1.0
+  win_bonus: 176.0
+  lose_penalty: 176.0
+  time_penalty: 0.0
+  normalize_factor: 0.001
+  full_hp: 176
+```
+
+所以你現在觀察到的訓練與錄影結果，都是基於 `reference_v1` reward，而不是較簡單的 `baseline` reward。
+
 ### 如何修改 ROM 路徑
 
 有兩種方式。
