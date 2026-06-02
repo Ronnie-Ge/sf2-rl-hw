@@ -20,6 +20,8 @@ from .utils.paths import (
 )
 from .utils.video import VideoFrameWriter
 
+POST_RESULT_TAIL_STEPS = 15
+
 
 def run_recording(
     config_path: Path,
@@ -162,6 +164,7 @@ def record_checkpoint(
         seed=config.runtime.seed,
         render=render,
         monitor=False,
+        terminate_on_result=False,
     )
     current_writer: Dict[str, Any] = {"writer": None, "output_path": None}
     video_outputs: List[str] = []
@@ -213,6 +216,7 @@ def record_checkpoint(
             render=render,
             experiment_name=config.experiment_name,
             checkpoint_step=step_value,
+            max_post_result_steps=POST_RESULT_TAIL_STEPS,
             episode_start_callback=on_episode_start,
             step_callback=on_step,
             episode_end_callback=on_episode_end,

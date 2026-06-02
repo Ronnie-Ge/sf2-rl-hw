@@ -1,0 +1,38 @@
+extends: ../base.yaml
+
+name: baseline-10m
+notes: Long-run baseline using reference_v1 reward for checkpoint selection across 10M timesteps.
+tags:
+  - baseline
+  - long-run
+  - checkpoint-search
+  - reference-v1
+
+runtime:
+  experiment_name: baseline-10m
+
+ppo:
+  total_timesteps: 10000000
+  num_envs: 16
+  n_steps: 512
+  batch_size: 512
+  n_epochs: 4
+  gamma: 0.94
+  ent_coef: 0.0
+  checkpoint_freq: 500000
+
+evaluation:
+  episodes: 5
+  deterministic: true
+  render: false
+  save_metrics: true
+  trigger_every_n_timesteps: 500000
+
+recording:
+  enabled: true
+  episodes: 1
+  deterministic: true
+  fps: 10
+  overlay: true
+  save_video: true
+  render: false

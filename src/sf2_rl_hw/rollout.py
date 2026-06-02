@@ -31,6 +31,7 @@ def run_policy_episodes(
     render: bool,
     experiment_name: str,
     checkpoint_step: Optional[int],
+    max_post_result_steps: int = 0,
     episode_start_callback: Optional[Callable[[int], None]] = None,
     step_callback: Optional[Callable[[int, np.ndarray, Dict[str, Any]], None]] = None,
     episode_end_callback: Optional[Callable[[int, EpisodeMetrics], None]] = None,
@@ -47,6 +48,7 @@ def run_policy_episodes(
         episode_return = 0.0
         episode_length = 0
         latest_info = dict(reset_info)
+        post_result_steps_remaining: Optional[int] = None
 
         while not done:
             action = predict_action(model, observation, deterministic=deterministic)
@@ -78,6 +80,14 @@ def run_policy_episodes(
                 frame = observation_to_frame(observation)
             if step_callback:
                 step_callback(episode_index, np.asarray(frame, dtype=np.uint8), overlay_state)
+
+            if not done and max_post_result_steps > 0 and info.get("result", "ongoing") != "ongoing":
+                if post_result_steps_remaining is None:
+                    post_result_steps_remaining = max_post_result_steps
+                else:
+                    post_result_steps_remaining -= 1
+                    if post_result_steps_remaining <= 0:
+                        done = True
 
         summary = EpisodeMetrics(
             episode_index=episode_index + 1,

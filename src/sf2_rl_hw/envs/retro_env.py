@@ -10,6 +10,7 @@ import numpy as np
 from PIL import Image
 
 from ..config import EnvironmentConfig, RewardConfig
+from ..rewards.base import RewardBreakdown
 from ..rewards import RewardTransition, compute_reward
 from ..utils.paths import project_root
 
@@ -32,17 +33,20 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
         env_config: EnvironmentConfig,
         reward_config: RewardConfig,
         render: bool,
+        terminate_on_result: bool = True,
     ) -> None:
         super().__init__(env)
         self.env_config = env_config
         self.reward_config = reward_config
         self.render_enabled = render
+        self.terminate_on_result = terminate_on_result
         self.frame_buffer: Deque[np.ndarray] = collections.deque(maxlen=env_config.frame_stack)
         self.total_env_steps = 0
         self.prev_agent_hp = reward_config.full_hp
         self.prev_enemy_hp = reward_config.full_hp
         self._reset_returns_info = False
         self._step_returns_truncated = False
+        self._terminal_reward_emitted = False
 
         if env_config.grayscale:
             obs_shape = (env_config.height, env_config.width, env_config.frame_stack)
@@ -74,6 +78,7 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
         self.total_env_steps = 0
         self.prev_agent_hp = int(info.get("agent_hp", self.reward_config.full_hp))
         self.prev_enemy_hp = int(info.get("enemy_hp", self.reward_config.full_hp))
+        self._terminal_reward_emitted = False
 
         normalized_info = self._normalize_info(info, observation, False)
         stacked = self._stack_observation()
@@ -119,12 +124,18 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
             env_step=normalized_info["env_step"],
             result=normalized_info["result"],
         )
-        reward, breakdown = compute_reward(transition, self.reward_config)
+        if self._terminal_reward_emitted and normalized_info["result"] != "ongoing":
+            reward = 0.0
+            breakdown = RewardBreakdown(profile=self.reward_config.profile)
+        else:
+            reward, breakdown = compute_reward(transition, self.reward_config)
+            if normalized_info["result"] != "ongoing":
+                self._terminal_reward_emitted = True
         normalized_info["reward_breakdown"] = breakdown.to_dict()
         self.prev_agent_hp = normalized_info["agent_hp"]
         self.prev_enemy_hp = normalized_info["enemy_hp"]
 
-        done = normalized_info["round_done"]
+        done = raw_done if not self.terminate_on_result else normalized_info["round_done"]
         if not self.env_config.reset_round:
             done = False
 
@@ -217,6 +228,7 @@ def build_retro_env(
     seed: Optional[int] = None,
     render: Optional[bool] = None,
     monitor: bool = False,
+    terminate_on_result: bool = True,
 ) -> Any:
     try:
         import retro  # type: ignore
@@ -246,6 +258,7 @@ def build_retro_env(
         env_config=env_config,
         reward_config=reward_config,
         render=env_config.render if render is None else render,
+        terminate_on_result=terminate_on_result,
     )
     if seed is not None:
         wrapped.seed(seed)
@@ -259,6 +272,7 @@ def make_env_factory(
     seed: int,
     render: Optional[bool] = None,
     monitor: bool = False,
+    terminate_on_result: bool = True,
 ) -> Callable[[], Any]:
     def _factory() -> Any:
         return build_retro_env(
@@ -267,6 +281,7 @@ def make_env_factory(
             seed=seed,
             render=render,
             monitor=monitor,
+            terminate_on_result=terminate_on_result,
         )
 
     return _factory
