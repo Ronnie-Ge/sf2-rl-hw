@@ -15,6 +15,19 @@ env:
   state: Champion.Level12.RyuVsBison
   scenario: default
   rom_path: ../ROM/Street Fighter II' - Special Champion Edition (USA).zip
+  buttons:
+    - B
+    - A
+    - MODE
+    - START
+    - UP
+    - DOWN
+    - LEFT
+    - RIGHT
+    - C
+    - Y
+    - X
+    - Z
   frame_skip: 6
   frame_stack: 9
   width: 128

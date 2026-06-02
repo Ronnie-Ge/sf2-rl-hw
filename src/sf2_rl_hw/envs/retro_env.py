@@ -47,6 +47,16 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
         self._reset_returns_info = False
         self._step_returns_truncated = False
         self._terminal_reward_emitted = False
+        self.full_buttons = [str(button) for button in getattr(env, "buttons", [])]
+        self.buttons = list(env_config.buttons)
+        self._button_index = {button: index for index, button in enumerate(self.full_buttons)}
+
+        missing_buttons = [button for button in self.buttons if button not in self._button_index]
+        if missing_buttons:
+            raise ValueError(
+                f"Configured buttons are not available in the retro environment: {missing_buttons}. "
+                f"Available buttons: {self.full_buttons}"
+            )
 
         if env_config.grayscale:
             obs_shape = (env_config.height, env_config.width, env_config.frame_stack)
@@ -59,7 +69,7 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
             shape=obs_shape,
             dtype=np.uint8,
         )
-        self.action_space = env.action_space
+        self.action_space = _GYM.spaces.MultiBinary(len(self.buttons))
         self.metadata = getattr(env, "metadata", {})
 
     def reset(self, **kwargs: Any) -> Any:
@@ -91,9 +101,10 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
         raw_done = False
         latest_observation = None
         latest_info: Dict[str, Any] = {}
+        full_action = self._map_action(action)
 
         for _ in range(self.env_config.frame_skip):
-            step_result = self.env.step(action)
+            step_result = self.env.step(full_action)
             if len(step_result) == 5:
                 observation, _, terminated, truncated, info = step_result
                 self._step_returns_truncated = True
@@ -182,6 +193,19 @@ class StreetFighterEnvWrapper(_GYM.Wrapper):
             source_index = channel_index * group_size + (group_size - 1)
             channels.append(self.frame_buffer[source_index][:, :, channel_index])
         return np.stack(channels, axis=-1)
+
+    def _map_action(self, action: Any) -> np.ndarray:
+        action_array = np.asarray(action, dtype=np.int8).reshape(-1)
+        if action_array.shape[0] != len(self.buttons):
+            raise ValueError(
+                f"Expected action with {len(self.buttons)} entries, got {action_array.shape[0]}"
+            )
+
+        full_action = np.zeros(len(self.full_buttons), dtype=np.int8)
+        for value, button in zip(action_array, self.buttons):
+            if int(value) != 0:
+                full_action[self._button_index[button]] = 1
+        return full_action
 
     def _normalize_info(
         self,

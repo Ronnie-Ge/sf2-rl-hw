@@ -5,6 +5,21 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 import os
 
+DEFAULT_BUTTONS = [
+    "B",
+    "A",
+    "MODE",
+    "START",
+    "UP",
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "C",
+    "Y",
+    "X",
+    "Z",
+]
+
 
 @dataclass
 class RuntimeConfig:
@@ -20,6 +35,7 @@ class EnvironmentConfig:
     state: str = "Champion.Level12.RyuVsBison"
     scenario: str = "default"
     rom_path: str = ""
+    buttons: List[str] = field(default_factory=lambda: list(DEFAULT_BUTTONS))
     frame_skip: int = 6
     frame_stack: int = 9
     width: int = 128
@@ -228,6 +244,16 @@ def _validate_config(config: ExperimentConfig, config_path: Path) -> None:
         raise ValueError("env.frame_stack must be greater than 0")
     if config.env.width <= 0 or config.env.height <= 0:
         raise ValueError("env.width and env.height must be greater than 0")
+    if not config.env.buttons:
+        raise ValueError("env.buttons must contain at least one button")
+    if len(config.env.buttons) != len(set(config.env.buttons)):
+        raise ValueError("env.buttons cannot contain duplicate button names")
+    invalid_buttons = [button for button in config.env.buttons if button not in DEFAULT_BUTTONS]
+    if invalid_buttons:
+        raise ValueError(
+            f"env.buttons contains unsupported button names: {invalid_buttons}. "
+            f"Supported buttons: {DEFAULT_BUTTONS}"
+        )
     if config.ppo.total_timesteps <= 0:
         raise ValueError("ppo.total_timesteps must be greater than 0")
     if config.ppo.num_envs <= 0:

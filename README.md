@@ -175,6 +175,7 @@ uv run sf2-rl-hw --help
 重要項目如下：
 
 - `runtime.device: auto`
+- `env.buttons: [B, A, MODE, START, UP, DOWN, LEFT, RIGHT, C, Y, X, Z]`
 - `env.frame_skip: 6`
 - `env.frame_stack: 9`
 - `env.width: 128`
@@ -188,6 +189,57 @@ uv run sf2-rl-hw --help
 - `recording.fps: 10`
 
 `recording.fps` 預設為 `10`，原因是 baseline 的 `frame_skip=6`。目前錄影只會保留每次 agent step 的最後一張畫面，因此若仍用 `60 fps` 輸出，影片會看起來像快轉；`10 fps` 會比較接近正常觀感。
+
+### 可用按鍵設定
+
+`env.buttons` 用來控制 agent 可以學哪些按鍵。
+
+目前預設值會保留 Genesis 版本的完整 12 鍵：
+
+```yaml
+env:
+  buttons:
+    - B
+    - A
+    - MODE
+    - START
+    - UP
+    - DOWN
+    - LEFT
+    - RIGHT
+    - C
+    - Y
+    - X
+    - Z
+```
+
+這樣做的原因是向後相容：
+
+- 舊 config 不需要調整
+- 已經訓練好的 full-action checkpoint 仍能照原本方式載入
+
+如果你要縮減 action space，可以在新的實驗設定覆寫成子集合，例如拿掉 `MODE` 與 `START`：
+
+```yaml
+env:
+  buttons:
+    - B
+    - A
+    - UP
+    - DOWN
+    - LEFT
+    - RIGHT
+    - C
+    - Y
+    - X
+    - Z
+```
+
+要注意的是：
+
+- `env.buttons` 只接受預設 12 鍵中的子集合
+- 按鍵順序會直接對應 policy 輸出的 action 維度
+- 一旦改了 `env.buttons`，action space 就會改變，舊 checkpoint 不能直接沿用到新的按鍵設定
 
 ### 目前 reward 設計
 
