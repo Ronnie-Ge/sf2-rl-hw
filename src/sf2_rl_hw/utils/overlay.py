@@ -10,7 +10,6 @@ def format_overlay_lines(overlay_state: Dict[str, Any]) -> List[str]:
     return [
         f"exp: {overlay_state['experiment_name']}",
         f"step: {overlay_state['checkpoint_step']}",
-        f"episode: {overlay_state['episode']}",
         f"env_step: {overlay_state['env_step']}",
         f"action: {overlay_state['action']}",
         f"reward: {overlay_state['instant_reward']:.4f}",
