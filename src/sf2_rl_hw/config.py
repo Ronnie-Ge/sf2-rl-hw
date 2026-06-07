@@ -38,6 +38,7 @@ class EnvironmentConfig:
     buttons: List[str] = field(default_factory=lambda: list(DEFAULT_BUTTONS))
     frame_skip: int = 6
     frame_stack: int = 9
+    stack_mode: str = "standard_rgb"
     width: int = 128
     height: int = 100
     grayscale: bool = False
@@ -242,6 +243,8 @@ def _validate_config(config: ExperimentConfig, config_path: Path) -> None:
         raise ValueError("env.frame_skip must be greater than 0")
     if config.env.frame_stack <= 0:
         raise ValueError("env.frame_stack must be greater than 0")
+    if config.env.stack_mode not in {"standard_rgb", "legacy_reference"}:
+        raise ValueError("env.stack_mode must be one of: standard_rgb, legacy_reference")
     if config.env.width <= 0 or config.env.height <= 0:
         raise ValueError("env.width and env.height must be greater than 0")
     if not config.env.buttons:
@@ -268,6 +271,12 @@ def _validate_config(config: ExperimentConfig, config_path: Path) -> None:
         raise ValueError("recording.fps must be greater than 0")
     if config.reward.profile not in {"baseline", "reference_v1"}:
         raise ValueError("reward.profile must be one of: baseline, reference_v1")
+    if config.env.grayscale and config.env.stack_mode != "standard_rgb":
+        raise ValueError("env.stack_mode=legacy_reference is only supported when env.grayscale is false")
+    if not config.env.grayscale and config.env.stack_mode == "legacy_reference" and config.env.frame_stack % 3 != 0:
+        raise ValueError(
+            "env.frame_stack must be divisible by 3 when env.stack_mode is legacy_reference"
+        )
 def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
     merged = dict(base)
     for key, value in override.items():

@@ -1,0 +1,42 @@
+extends: ../base.yaml
+
+name: baseline-legacy-reference
+notes: Reference-style observation compression with RGB temporal mixing kept as an explicit config option.
+tags:
+  - baseline
+  - reference-observation
+  - legacy-reference
+
+runtime:
+  experiment_name: baseline-legacy-reference
+
+env:
+  grayscale: false
+  frame_stack: 9
+  stack_mode: legacy_reference
+
+ppo:
+  total_timesteps: 10000000
+  num_envs: 16
+  n_steps: 512
+  batch_size: 512
+  n_epochs: 4
+  gamma: 0.94
+  ent_coef: 0.0
+  checkpoint_freq: 500000
+
+evaluation:
+  episodes: 5
+  deterministic: true
+  render: false
+  save_metrics: true
+  trigger_every_n_timesteps: 500000
+
+recording:
+  enabled: true
+  episodes: 1
+  deterministic: true
+  fps: 10
+  overlay: true
+  save_video: true
+  render: false

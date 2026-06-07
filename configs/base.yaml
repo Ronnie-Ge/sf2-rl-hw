@@ -28,6 +28,7 @@ env:
     - Z
   frame_skip: 6
   frame_stack: 9
+  stack_mode: standard_rgb
   width: 128
   height: 100
   grayscale: false

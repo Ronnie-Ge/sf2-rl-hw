@@ -179,6 +179,7 @@ uv run sf2-rl-hw --help
 - `env.buttons: [B, A, UP, DOWN, LEFT, RIGHT, C, Y, X, Z]`
 - `env.frame_skip: 6`
 - `env.frame_stack: 9`
+- `env.stack_mode: standard_rgb`
 - `env.width: 128`
 - `env.height: 100`
 - `ppo.num_envs: 4`
@@ -193,7 +194,14 @@ uv run sf2-rl-hw --help
 
 ### 觀測堆疊規則
 
-目前專案的 observation 採標準時間堆疊：
+目前專案的 observation 支援兩種堆疊模式：
+
+- `stack_mode: standard_rgb`
+- `stack_mode: legacy_reference`
+
+預設使用 `standard_rgb`。
+
+#### `standard_rgb`
 
 - `grayscale: true` 時，輸出 shape 為 `H x W x frame_stack`
 - `grayscale: false` 時，輸出 shape 為 `H x W x (3 * frame_stack)`
@@ -210,6 +218,20 @@ uv run sf2-rl-hw --help
 - `100 x 128 x 27`
 
 也就是最近 `9` 張 RGB 畫面直接沿 channel 維度串接，而不是把不同時間點壓縮成單一三通道影像。
+
+#### `legacy_reference`
+
+這個模式保留 `street-fighter-ai` 的 observation 壓縮寫法，僅限 `grayscale: false` 使用：
+
+- 最近 `frame_stack` 張 RGB frame 仍會進入 buffer
+- 最後只輸出 `3` channels
+- `R/G/B` 會分別取自不同時間區段的對應色彩通道
+
+以 `frame_stack = 9` 為例，輸出仍是：
+
+- `100 x 128 x 3`
+
+這種模式不屬於標準時間堆疊，但在固定 state 任務上有時更容易收斂，因此保留為可切換選項。
 
 ### 可用按鍵設定
 
