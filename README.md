@@ -567,7 +567,6 @@ env:
 
 - `experiment_name`
 - `checkpoint_step`
-- `episode`
 - `env_step`
 - `action`
 - `instant_reward`
@@ -582,8 +581,6 @@ env:
   目前這支影片所屬的實驗名稱，通常對應 config 裡的 `name` 或 `runtime.experiment_name`
 - `checkpoint_step`
   這個模型 checkpoint 對應的訓練步數，例如 `500000` 代表使用訓練到 50 萬步時儲存的模型
-- `episode`
-  目前錄到第幾個回合
 - `env_step`
   目前回合中已經執行了多少個遊戲內步數
 - `action`

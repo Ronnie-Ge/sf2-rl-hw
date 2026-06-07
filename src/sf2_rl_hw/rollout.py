@@ -66,7 +66,6 @@ def run_policy_episodes(
             overlay_state = {
                 "experiment_name": experiment_name,
                 "checkpoint_step": checkpoint_step if checkpoint_step is not None else "manual",
-                "episode": episode_index + 1,
                 "env_step": info.get("env_step", episode_length),
                 "action": action_to_text(action, action_labels),
                 "instant_reward": float(reward),
