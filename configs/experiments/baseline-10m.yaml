@@ -11,8 +11,27 @@ tags:
 runtime:
   experiment_name: baseline-10m
 
+env:
+  state: Champion.Level12.RyuVsBison
+  buttons:
+    - B
+    - A
+    - MODE
+    - START
+    - UP
+    - DOWN
+    - LEFT
+    - RIGHT
+    - C
+    - Y
+    - X
+    - Z
+  grayscale: false
+  frame_stack: 9
+  stack_mode: legacy_reference
+
 ppo:
-  total_timesteps: 10000000
+  total_timesteps: 15000000               #增加訓練
   num_envs: 16
   n_steps: 512
   batch_size: 512
@@ -33,6 +52,7 @@ recording:
   episodes: 1
   deterministic: true
   fps: 10
-  overlay: true
+  overlay: false
   save_video: true
   render: false
+  crop_black_borders: true
